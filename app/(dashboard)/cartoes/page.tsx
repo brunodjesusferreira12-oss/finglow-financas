@@ -84,7 +84,7 @@ export default async function CreditCardsPage({ searchParams }: { searchParams?:
       <CreditCardPeriodFilter month={month} year={year} />
 
       <div className="grid gap-6 xl:grid-cols-[0.88fr_1.12fr]">
-        <CreditCardForm initialData={editingCard} />
+        <CreditCardForm key={editingCard?.id ?? "new-card"} initialData={editingCard} />
         {snapshot.cards.length > 0 ? (
           <CreditCardList cards={snapshot.cards} />
         ) : (
@@ -97,7 +97,12 @@ export default async function CreditCardsPage({ searchParams }: { searchParams?:
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[0.88fr_1.12fr]">
-        <CreditCardPurchaseForm cards={snapshot.cards} categories={categories} initialData={editingPurchase} />
+        <CreditCardPurchaseForm
+          key={editingPurchase?.id ?? "new-purchase"}
+          cards={snapshot.cards}
+          categories={categories}
+          initialData={editingPurchase}
+        />
         <CreditCardInvoice snapshot={snapshot} />
       </div>
 

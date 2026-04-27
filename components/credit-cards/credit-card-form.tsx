@@ -1,8 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useTransition } from "react";
+import { useRouter as useNextRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 
 import { upsertCreditCardAction } from "@/app/actions/credit-cards";
@@ -14,26 +14,36 @@ import { useNotifications } from "@/hooks/use-notifications";
 import { creditCardSchema, type CreditCardFormValues } from "@/lib/validations/credit-cards";
 import type { CreditCard } from "@/types/finance";
 
+function buildCreditCardFormDefaults(initialData: CreditCard | null | undefined): CreditCardFormValues {
+  return {
+    id: initialData?.id,
+    name: initialData?.name ?? "",
+    lastFour: initialData?.last_four ?? "",
+    closingDay: initialData?.closing_day ?? 25,
+    dueDay: initialData?.due_day ?? 10,
+    limitAmount: initialData?.limit_amount ?? 0,
+    color: initialData?.color ?? "#0f766e",
+  };
+}
+
 export function CreditCardForm({ initialData }: { initialData?: CreditCard | null }) {
-  const router = useRouter();
+  const router = useNextRouter();
   const { notify } = useNotifications();
   const [isPending, startTransition] = useTransition();
+  const defaultValues = useMemo(() => buildCreditCardFormDefaults(initialData), [initialData]);
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<CreditCardFormValues>({
     resolver: zodResolver(creditCardSchema),
-    defaultValues: {
-      id: initialData?.id,
-      name: initialData?.name ?? "",
-      lastFour: initialData?.last_four ?? "",
-      closingDay: initialData?.closing_day ?? 25,
-      dueDay: initialData?.due_day ?? 10,
-      limitAmount: initialData?.limit_amount ?? 0,
-      color: initialData?.color ?? "#0f766e",
-    },
+    defaultValues,
   });
+
+  useEffect(() => {
+    reset(defaultValues);
+  }, [defaultValues, reset]);
 
   const onSubmit = (values: CreditCardFormValues) => {
     startTransition(async () => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useTransition } from "react";
+import { useEffect, useMemo, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -16,6 +16,24 @@ import { useNotifications } from "@/hooks/use-notifications";
 import { creditCardPurchaseSchema, type CreditCardPurchaseFormValues } from "@/lib/validations/credit-cards";
 import type { Category, CreditCard, CreditCardPurchaseWithRelations } from "@/types/finance";
 
+function buildPurchaseFormDefaults(
+  initialData: CreditCardPurchaseWithRelations | null | undefined,
+  cards: CreditCard[],
+  categories: Category[],
+): CreditCardPurchaseFormValues {
+  return {
+    id: initialData?.id,
+    cardId: initialData?.card_id ?? cards[0]?.id ?? "",
+    categoryId: initialData?.category_id ?? categories[0]?.id ?? "",
+    description: initialData?.description ?? "",
+    amountTotal: initialData?.amount_total ?? 0,
+    purchaseDate: initialData?.purchase_date ?? new Date().toISOString().slice(0, 10),
+    installmentsCount: initialData?.installments_count ?? 1,
+    isFixed: initialData?.is_fixed ?? false,
+    notes: initialData?.notes ?? "",
+  };
+}
+
 export function CreditCardPurchaseForm({
   cards,
   categories,
@@ -28,28 +46,27 @@ export function CreditCardPurchaseForm({
   const router = useRouter();
   const { notify } = useNotifications();
   const [isPending, startTransition] = useTransition();
+  const defaultValues = useMemo(
+    () => buildPurchaseFormDefaults(initialData, cards, categories),
+    [initialData, cards, categories],
+  );
   const {
     register,
     handleSubmit,
     watch,
     setValue,
+    reset,
     formState: { errors },
   } = useForm<CreditCardPurchaseFormValues>({
     resolver: zodResolver(creditCardPurchaseSchema),
-    defaultValues: {
-      id: initialData?.id,
-      cardId: initialData?.card_id ?? cards[0]?.id ?? "",
-      categoryId: initialData?.category_id ?? categories[0]?.id ?? "",
-      description: initialData?.description ?? "",
-      amountTotal: initialData?.amount_total ?? 0,
-      purchaseDate: initialData?.purchase_date ?? new Date().toISOString().slice(0, 10),
-      installmentsCount: initialData?.installments_count ?? 1,
-      isFixed: initialData?.is_fixed ?? false,
-      notes: initialData?.notes ?? "",
-    },
+    defaultValues,
   });
 
   const isFixed = watch("isFixed");
+
+  useEffect(() => {
+    reset(defaultValues);
+  }, [defaultValues, reset]);
 
   useEffect(() => {
     if (isFixed) {
