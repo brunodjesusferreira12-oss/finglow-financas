@@ -22,39 +22,53 @@ export function CategoryBreakdownChart({
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+      <CardContent className="grid items-center gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         {data.length > 0 ? (
           <>
-            <div className="h-[280px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={data} dataKey="total" nameKey="categoryName" innerRadius={68} outerRadius={104} paddingAngle={4}>
-                    {data.map((entry, index) => (
-                      <Cell key={entry.categoryId} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                </PieChart>
-              </ResponsiveContainer>
+            <div className="min-w-0">
+              <div className="mx-auto h-[260px] w-full max-w-[320px] sm:h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart margin={{ top: 12, right: 12, bottom: 12, left: 12 }}>
+                    <Pie
+                      data={data}
+                      dataKey="total"
+                      nameKey="categoryName"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius="58%"
+                      outerRadius="82%"
+                      paddingAngle={3}
+                      stroke="rgba(15, 23, 42, 0.85)"
+                      strokeWidth={2}
+                    >
+                      {data.map((entry, index) => (
+                        <Cell key={entry.categoryId} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
             </div>
-            <div className="space-y-3">
+
+            <div className="min-w-0 space-y-3">
               {data.map((item, index) => (
-                <div key={item.categoryId} className="flex items-center justify-between rounded-2xl border border-border/70 bg-secondary/30 px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <span className="h-3 w-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
-                    <div>
-                      <p className="font-medium">{item.categoryName}</p>
+                <div key={item.categoryId} className="flex items-center justify-between gap-4 rounded-2xl border border-border/70 bg-secondary/30 px-4 py-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{item.categoryName}</p>
                       <p className="text-sm text-muted-foreground">{item.percentage}% do total</p>
                     </div>
                   </div>
-                  <p className="font-semibold">{formatCurrency(item.total)}</p>
+                  <p className="shrink-0 font-semibold">{formatCurrency(item.total)}</p>
                 </div>
               ))}
             </div>
           </>
         ) : (
           <div className="col-span-full flex h-[280px] items-center justify-center rounded-3xl border border-dashed border-border bg-secondary/30 text-sm text-muted-foreground">
-            Sem categorias suficientes para montar o grafico.
+            Sem categorias suficientes para montar o gráfico.
           </div>
         )}
       </CardContent>
