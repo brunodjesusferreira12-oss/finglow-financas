@@ -1,3 +1,4 @@
+import { getBillingMonthDiff } from "@/lib/credit-card";
 import { calculatePercentage, safeNumber } from "@/lib/utils";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type {
@@ -10,21 +11,8 @@ import type {
 
 type RawCreditCardPurchase = CreditCardPurchaseWithRelations;
 
-function getBillingStartDate(purchase: CreditCardPurchaseWithRelations) {
-  const purchaseDate = new Date(`${purchase.purchase_date}T00:00:00`);
-  const purchaseDay = purchaseDate.getDate();
-  const closingDay = purchase.card?.closing_day ?? 31;
-  const billingMonthOffset = purchaseDay > closingDay ? 1 : 0;
-
-  return new Date(purchaseDate.getFullYear(), purchaseDate.getMonth() + billingMonthOffset, 1);
-}
-
 function getMonthDiff(purchase: CreditCardPurchaseWithRelations, month: number, year: number) {
-  const billingStartDate = getBillingStartDate(purchase);
-  const startMonth = billingStartDate.getMonth() + 1;
-  const startYear = billingStartDate.getFullYear();
-
-  return (year - startYear) * 12 + (month - startMonth);
+  return getBillingMonthDiff(purchase.purchase_date, purchase.card?.closing_day, month, year);
 }
 
 function getInstallmentAmount(amountTotal: number, installmentsCount: number, installmentNumber: number) {

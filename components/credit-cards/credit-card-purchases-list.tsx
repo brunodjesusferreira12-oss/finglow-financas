@@ -10,19 +10,32 @@ import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProgressBar } from "@/components/ui/progress-bar";
+import { getPaidInstallmentsCount } from "@/lib/credit-card";
 import { useNotifications } from "@/hooks/use-notifications";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { CreditCardPurchaseWithRelations } from "@/types/finance";
 
 function getInstallmentProgress(purchase: CreditCardPurchaseWithRelations, month: number, year: number) {
-  if (purchase.is_fixed) return 100;
+  if (purchase.is_fixed) {
+    return {
+      percentage: 100,
+      paidInstallments: 1,
+    };
+  }
 
-  const purchaseDate = new Date(`${purchase.purchase_date}T00:00:00`);
-  const diff = (year - purchaseDate.getFullYear()) * 12 + (month - (purchaseDate.getMonth() + 1));
-  const paidInstallments = Math.max(0, Math.min(purchase.installments_count, diff + 1));
+  const paidInstallments = getPaidInstallmentsCount(
+    purchase.purchase_date,
+    purchase.card?.closing_day,
+    purchase.installments_count,
+    month,
+    year,
+  );
 
-  return Math.round((paidInstallments / purchase.installments_count) * 100);
+  return {
+    percentage: Math.round((paidInstallments / purchase.installments_count) * 100),
+    paidInstallments,
+  };
 }
 
 function DeletePurchaseButton({ purchaseId }: { purchaseId: string }) {
@@ -77,7 +90,7 @@ export function CreditCardPurchasesList({
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="font-semibold">{purchase.description}</p>
-                      <Badge tone={purchase.is_fixed ? "warning" : progress >= 100 ? "success" : "neutral"}>
+                      <Badge tone={purchase.is_fixed ? "warning" : progress.percentage >= 100 ? "success" : "neutral"}>
                         {purchase.is_fixed ? "Fixa mensal" : `${purchase.installments_count}x`}
                       </Badge>
                     </div>
@@ -97,11 +110,14 @@ export function CreditCardPurchasesList({
 
                 {!purchase.is_fixed ? (
                   <>
-                    <ProgressBar value={progress} tone={progress >= 100 ? "safe" : progress >= 80 ? "warning" : "safe"} />
+                    <ProgressBar
+                      value={progress.percentage}
+                      tone={progress.percentage >= 100 ? "safe" : progress.percentage >= 80 ? "warning" : "safe"}
+                    />
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span>{progress}% concluido</span>
+                      <span>{progress.percentage}% concluido</span>
                       <span>
-                        {Math.round((progress / 100) * purchase.installments_count)} de {purchase.installments_count} parcelas
+                        {progress.paidInstallments} de {purchase.installments_count} parcelas
                       </span>
                     </div>
                   </>
