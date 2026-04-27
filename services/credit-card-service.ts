@@ -10,10 +10,19 @@ import type {
 
 type RawCreditCardPurchase = CreditCardPurchaseWithRelations;
 
-function getMonthDiff(purchaseDate: string, month: number, year: number) {
-  const date = new Date(`${purchaseDate}T00:00:00`);
-  const startMonth = date.getMonth() + 1;
-  const startYear = date.getFullYear();
+function getBillingStartDate(purchase: CreditCardPurchaseWithRelations) {
+  const purchaseDate = new Date(`${purchase.purchase_date}T00:00:00`);
+  const purchaseDay = purchaseDate.getDate();
+  const closingDay = purchase.card?.closing_day ?? 31;
+  const billingMonthOffset = purchaseDay > closingDay ? 1 : 0;
+
+  return new Date(purchaseDate.getFullYear(), purchaseDate.getMonth() + billingMonthOffset, 1);
+}
+
+function getMonthDiff(purchase: CreditCardPurchaseWithRelations, month: number, year: number) {
+  const billingStartDate = getBillingStartDate(purchase);
+  const startMonth = billingStartDate.getMonth() + 1;
+  const startYear = billingStartDate.getFullYear();
 
   return (year - startYear) * 12 + (month - startMonth);
 }
@@ -27,10 +36,10 @@ function getInstallmentAmount(amountTotal: number, installmentsCount: number, in
   return cents / 100;
 }
 
-function getChargeDate(purchaseDate: string, month: number, year: number) {
-  const day = Number(purchaseDate.slice(8, 10));
+function getChargeDate(purchase: CreditCardPurchaseWithRelations, month: number, year: number) {
+  const closingDay = purchase.card?.closing_day ?? 31;
   const lastDayOfMonth = new Date(year, month, 0).getDate();
-  const resolvedDay = Math.min(day, lastDayOfMonth);
+  const resolvedDay = Math.min(closingDay, lastDayOfMonth);
 
   return `${year}-${String(month).padStart(2, "0")}-${String(resolvedDay).padStart(2, "0")}`;
 }
@@ -40,7 +49,7 @@ function toMonthlyCharge(
   month: number,
   year: number,
 ): CreditCardMonthlyCharge | null {
-  const diff = getMonthDiff(purchase.purchase_date, month, year);
+  const diff = getMonthDiff(purchase, month, year);
 
   if (diff < 0) return null;
 
@@ -49,7 +58,7 @@ function toMonthlyCharge(
       purchaseId: purchase.id,
       cardId: purchase.card_id,
       categoryId: purchase.category_id,
-      cardName: purchase.card?.name ?? "Cartão",
+      cardName: purchase.card?.name ?? "Cartao",
       cardLastFour: purchase.card?.last_four ?? null,
       cardColor: purchase.card?.color ?? "#0f766e",
       categoryName: purchase.category?.name ?? "Sem categoria",
@@ -57,7 +66,7 @@ function toMonthlyCharge(
       amount: safeNumber(purchase.amount_total),
       amountTotal: safeNumber(purchase.amount_total),
       purchaseDate: purchase.purchase_date,
-      chargeDate: getChargeDate(purchase.purchase_date, month, year),
+      chargeDate: getChargeDate(purchase, month, year),
       installmentNumber: null,
       installmentsCount: null,
       isFixed: true,
@@ -72,7 +81,7 @@ function toMonthlyCharge(
     purchaseId: purchase.id,
     cardId: purchase.card_id,
     categoryId: purchase.category_id,
-    cardName: purchase.card?.name ?? "Cartão",
+    cardName: purchase.card?.name ?? "Cartao",
     cardLastFour: purchase.card?.last_four ?? null,
     cardColor: purchase.card?.color ?? "#0f766e",
     categoryName: purchase.category?.name ?? "Sem categoria",
@@ -80,7 +89,7 @@ function toMonthlyCharge(
     amount: getInstallmentAmount(safeNumber(purchase.amount_total), purchase.installments_count, installmentNumber),
     amountTotal: safeNumber(purchase.amount_total),
     purchaseDate: purchase.purchase_date,
-    chargeDate: getChargeDate(purchase.purchase_date, month, year),
+    chargeDate: getChargeDate(purchase, month, year),
     installmentNumber,
     installmentsCount: purchase.installments_count,
     isFixed: false,
@@ -130,7 +139,7 @@ function toChargeEntry(purchase: CreditCardPurchaseWithRelations, charge: Credit
     created_at: purchase.created_at,
     updated_at: purchase.updated_at,
     category: purchase.category,
-    sourceLabel: `Cartão ${cardLabel}`,
+    sourceLabel: `Cartao ${cardLabel}`,
   };
 }
 
