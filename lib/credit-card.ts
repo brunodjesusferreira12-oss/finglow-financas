@@ -2,9 +2,9 @@ export function getBillingStartDate(purchaseDate: string, closingDay?: number | 
   const resolvedClosingDay = closingDay ?? 31;
   const date = new Date(`${purchaseDate}T00:00:00`);
 
-  // A compra entra na fatura do proximo mes ate o fechamento.
-  // Depois que o fechamento passa, ela so entra no mes posterior.
-  const billingMonthOffset = date.getDate() > resolvedClosingDay ? 2 : 1;
+  // Ate o fechamento, a compra entra na fatura do proprio mes.
+  // Depois do fechamento, ela passa para a fatura do mes seguinte.
+  const billingMonthOffset = date.getDate() > resolvedClosingDay ? 1 : 0;
 
   return new Date(date.getFullYear(), date.getMonth() + billingMonthOffset, 1);
 }
