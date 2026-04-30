@@ -25,9 +25,9 @@ function getInstallmentAmount(amountTotal: number, installmentsCount: number, in
 }
 
 function getChargeDate(purchase: CreditCardPurchaseWithRelations, month: number, year: number) {
-  const dueDay = purchase.card?.due_day ?? purchase.card?.closing_day ?? 31;
+  const closingDay = purchase.card?.closing_day ?? 31;
   const lastDayOfMonth = new Date(year, month, 0).getDate();
-  const resolvedDay = Math.min(dueDay, lastDayOfMonth);
+  const resolvedDay = Math.min(closingDay, lastDayOfMonth);
 
   return `${year}-${String(month).padStart(2, "0")}-${String(resolvedDay).padStart(2, "0")}`;
 }
