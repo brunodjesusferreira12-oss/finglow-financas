@@ -12,6 +12,7 @@ import { InlineNotice } from "@/components/ui/inline-notice";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { requireUser } from "@/lib/auth";
 import { MONTH_NAMES } from "@/lib/constants";
+import { getCurrentMonthYear } from "@/lib/date";
 import { formatCurrency } from "@/lib/format";
 import { getSingleParam } from "@/lib/utils";
 import { getCategories } from "@/services/category-service";
@@ -23,9 +24,9 @@ type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 export default async function CreditCardsPage({ searchParams }: { searchParams?: SearchParams }) {
   const user = await requireUser();
   const params = (await searchParams) ?? {};
-  const now = new Date();
-  const month = Number(getSingleParam(params.month) ?? now.getMonth() + 1);
-  const year = Number(getSingleParam(params.year) ?? now.getFullYear());
+  const currentPeriod = getCurrentMonthYear();
+  const month = Number(getSingleParam(params.month) ?? currentPeriod.month);
+  const year = Number(getSingleParam(params.year) ?? currentPeriod.year);
   const editCardId = getSingleParam(params.editCard);
   const editPurchaseId = getSingleParam(params.editPurchase);
 

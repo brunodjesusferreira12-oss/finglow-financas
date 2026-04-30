@@ -1,7 +1,7 @@
 export function getBillingStartDate(purchaseDate: string, closingDay?: number | null) {
   const resolvedClosingDay = closingDay ?? 31;
   const date = new Date(`${purchaseDate}T00:00:00`);
-  const billingMonthOffset = date.getDate() > resolvedClosingDay ? 1 : 0;
+  const billingMonthOffset = date.getDate() > resolvedClosingDay ? 2 : 1;
 
   return new Date(date.getFullYear(), date.getMonth() + billingMonthOffset, 1);
 }
